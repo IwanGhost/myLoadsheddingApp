@@ -7,100 +7,150 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-#from Final_L import Grab_Data
-
 import requests
-import sys
+import json
 from bs4 import BeautifulSoup
+import time
+import keyboard
+import schedule
+import time
+import os
+import sys
 import ctypes  # An included library with Python install.
 import re
+import openpyxl
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
-def main():
-    def func3():
-        print("Exiting")
-        sys.exit()
-    print("Running main frame")
-    #ctypes to display gui
-    def Mbox(title, text, style):
-        return ctypes.windll.user32.MessageBoxW(0, text, title, style)
+#global stage, to test for repeating events
+prev_status = ""
+# need to add day/time varible to check for same day
 
-    #get url
-    #url_1 = 'https://loadshed.org/zones/5576941750976512/loadshedding-eskom-co-za/stellenbosch'
-    url = 'https://mydorpie.com/m/?page=loadshedding&suburb=Stellenbosch&region=Stellenbosch&province=Western-Cape'
+#loading in excel file with loadshedding times
+wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 
-    #set headers
-    headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36'}
+stage_num = 0
 
-    #identify headers and url
-    page = requests.get(url, headers=headers)
-    #page2 = requests.get(url_2, headers=headers)
+currentDate = str(datetime.date.today())
 
-    #parse websites
-    soup = BeautifulSoup(page.content, 'html.parser')
-    #soup2 = BeautifulSoup(page2.content, 'html.parser')
+if_pass = False
 
-    #grabs data
-    title = soup.find("div", {"id": "bh2yellow"}).get_text()
+#path to root #Not permanent fix, needs better solution
+url = 'C:\\Users\Ghost\Documents'
 
-    #display grabbed data using gui
-    #Mbox('Loadshedding Status', title1, 1)
+def End():
+    print("Exiting Program")
+    sys.exit()
 
-    #check if there is loadshedding
-    #if loadshedding then extract stage
-    if title == "Loadshedding suspended until further notice":
-        delete_all_events()
-    if title != "Loadshedding suspended until further notice":
-        phase = int(get_stage_num(title))
-        print(phase)
-        #grabs all tables
-        table = soup.find_all('table')[0]
-        
-        #set variables
-        inc=2
-        stage=0
-        num=1
-        times = ""
-    
-        #some addition to get stage to the correct stage
-        stage = stage + inc + phase
 
-        #loop through table to extract times
-        for sibling in soup.find_all('table')[1].tr.next_siblings:
-            for td in sibling:
-                #print(num)
-                #check if number of stage on table match stage calculated
-                if(num == stage):
-                    times = td
-                num = num+1
+def currDate():
+    currentDate = str(datetime.date.today())
+    #returns in 2022-09-06 #YYYY, MM, DD
+    return currentDate
 
-        #remove unneeded elements in string
-        times = str(times)
-        times = times.replace("<","").replace(">","").replace("t","").replace("d","").replace("c","").replace("l","").replace("a","").replace("s","").replace("=","").replace('"','').replace("l","").replace("m","").replace("n","").replace("f","").replace("b","").replace("r","").replace("/","").replace(" ","")
-        times = str(times)
-        #print(times)
+def check_day():
 
-        #set cut to 12 since every 12th caharcter indicated end of time
-        n=12
+    currentDate = currDate()
 
-        #cut up string
-        new = [times[i:i+n] for i in range(0, len(times), n)]
+    res = currentDate[8:]
+    if res[0] == '0':
+        res = res[1 : : ]
+        day = int(res)
+        return day
+    else:
+        day = int(res)
+        return day
 
-        #remove unneeded elements from previous loop
-        final_times = [i.strip() for i in new]
 
-        #print out times underneath each other
-        for t in final_times:
-            print(t)
 
-        #write times to text file
-        with open('times.txt', 'w') as f:
-            for item in final_times:
-                f.write("%s\n" % item)
-        f.close()
+def get_load_status():
+
+    res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus')
+
+    stage = res.text[:1]
+
+
+    return stage
+
+def call_status():
+
+    global stage_num
+
+    status = get_load_status() #3
+
+    tmp_int = int(status) # 3
+
+    stage_num = tmp_int - 1 #0 -> 3 ->  2
+
+    day = check_day() #7
+
+    main(status, day) # ( 3, 7)
+
+    print('End')
+
+
+def main(status, day):
+
+    status = status
+    day = day
+    global prev_status
+    global wrkbk
+    global stage_num
+
+    #prev_status = prev_status
+    #status = "stage 1"
+    #compare status
+
+    ws = wrkbk['Stage_' + str(stage_num)]
+
+    if status != '1': # 1 = not loadshedding
+        if status == '2' and prev_status != status: # stage 1
+            prev_status = status
+            #call time function
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        elif status == '3' and prev_status != status: # stage 2
+            prev_status = status
+            #loop through excel
+            for row in ws.iter_rows():
+                val = row[(day + 1)].value
+                if val == stage_num:
+                    start_time = row[0].value
+                    end_time = row[1].value  # Need to have global variables 
+                    print(f'{start_time} {end_time}')
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        elif status == '4' and prev_status != status: # stage 3
+            prev_status = status
+            #call stage decoder
+            #call time function
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        elif status == '5' and prev_status != status: # stage 4
+            prev_status = status
+            #call stage decoder
+            #call time function
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        elif status == '6' and prev_status != status: # stage 5
+            prev_status = status
+            #call stage decoder
+            #call time function
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        elif status == '7' and prev_status != status: # stage 6
+            prev_status = status
+            #call stage decoder
+            #call time function
+            #call calander function with time information and add to calander
+            print(f"End Of Add {status}")
+        else:
+            print("No stage found! or Stage already implimented!")
+    else:
+        print("Something went wrong or No Loadshedding!")
+    # check status, if loadshed, then get times for stage, and add to calander, if not, then wait 5 min, and check again
     
 ##        """Shows basic usage of the Google Calendar API.
 ##        Prints the start and name of the next 10 events on the user's calendar.
