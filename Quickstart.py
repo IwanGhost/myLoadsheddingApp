@@ -11,39 +11,37 @@ import requests
 import json
 from bs4 import BeautifulSoup
 import time
-import keyboard
 import schedule
 import time
 import os
 import sys
-import ctypes  # An included library with Python install.
-import re
 import openpyxl
 import datetime
 
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
-#global stage, to test for repeating events
+# global stage, to test for repeating stages
 prev_status = ""
-# need to add day/time varible to check for same day
 
+# global var to check whether times on stages have passed
 old_time = True
 
-#loading in excel file with loadshedding times
+# loading in excel file with loadshedding times
 wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 
+# global var to check whether or not same stage was previously implimented
 stage_num = 0
 
-currentDate = str(datetime.date.today())
+# path to root, Not permanent fix, needs better solution - check dir for .txt file
+url = 'C:\\Users\Ghost\Documents' #C:\Users\Ghost\Documents
 
-#path to root #Not permanent fix, needs better solution
-url = 'C:\\Users\[Insert]\Documents'
-
+# Closes app
 def End():
     print("Exiting Program")
     sys.exit()
 
+# Return time in HH:MM:SS - 17:45:17
 def check_time():
 
     now = datetime.datetime.now()
@@ -51,11 +49,12 @@ def check_time():
     current_time = now.strftime("%H:%M:%S")
     return current_time
 
+# Returns date 2022-09-06 #YYYY, MM, DD
 def currDate():
     currentDate = str(datetime.date.today())
-    #returns in 2022-09-06 #YYYY, MM, DD
     return currentDate
 
+# Returns day - 09 - for 9th
 def check_day():
 
     currentDate = currDate()
@@ -69,6 +68,7 @@ def check_day():
         day = int(res)
         return day
 
+# checks if scheduled time have passed or not
 def check_old_time(start_time):
 
     global old_time
@@ -81,41 +81,45 @@ def check_old_time(start_time):
     else:
         return old_time
 
-
+# Returns stage via API - exp, 3
 def get_load_status():
 
     res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus')
 
     stage = res.text[:1]
 
-
     return stage
 
+# Calls this function every 5 minutes
 def call_status():
 
     global stage_num
 
     status = get_load_status() #3
 
-    tmp_int = int(status) # 3
+    if status != '99':
+        tmp_int = int(status) # 3
 
-    stage_num = tmp_int - 1 #0 -> 3 ->  2
+        stage_num = tmp_int - 1 #0 -> 3 ->  2
 
-    day = check_day() #7
+        print('Stage currently is: Stage ' + str(stage_num))
 
-    main_sys(status, day) # ( 3, 7)
+        day = check_day() #7
 
-    print('End')
+        main_sys(status, day) # ( 3, 7)
 
+        print('End Of Call')
+    else:
+        print('API is broken, App will be stopped')
+        End()
 
-def main_sys(status, day):
+# Function to simplify code and to do all logic
+def main_sys_call(day):
 
-    status = status
-    day = day
-    global prev_status
     global wrkbk
     global stage_num
     global old_time
+    day = day
 
     #prev_status = prev_status
     #status = "stage 1"
@@ -123,158 +127,73 @@ def main_sys(status, day):
 
     ws = wrkbk['Stage_' + str(stage_num)]
 
+    #loop through excel
+    for row in ws.iter_rows():
+        val = row[(day + 1)].value
+        if val == stage_num:
+            start_time = str(row[0].value)
+            end_time = str(row[1].value)  # Need to have global variables
+            start_date = str(currDate())
+            end_date = str(currDate())
+            print(f'{start_time} {end_time}')
+            #2022-09-09 #YYYY, MM, DD
+            if end_time[0:5] == '00:30':
+                temp_end_date = end_date[8:]# getting date
+                temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
+                end_date = con_date[0:8] + temp_end_date
+                #call calander function with time information and add to calander
+                create_calendar_events(start_time, end_time, start_date, end_date)
+            else:
+                check_old_time(start_time)
+                if old_time == False:
+                    create_calendar_events(start_time, end_time, start_date, end_date)
+                else:
+                    print('Old Time')
+
+# Main sys
+def main_sys(status, day):
+
+    status = status
+    day = day
+    global prev_status
+
     if status != '1': # 1 = not loadshedding
         if status == '2' and prev_status != status: # stage 1
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day) # call to test all conditions
+
         elif status == '3' and prev_status != status: # stage 2
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day)
+
         elif status == '4' and prev_status != status: # stage 3
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day)
+
         elif status == '5' and prev_status != status: # stage 4
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day)
+
         elif status == '6' and prev_status != status: # stage 5
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day)
+
         elif status == '7' and prev_status != status: # stage 6
             prev_status = status
-            #loop through excel
-            for row in ws.iter_rows():
-                val = row[(day + 1)].value
-                if val == stage_num:
-                    start_time = str(row[0].value)
-                    end_time = str(row[1].value)  # Need to have global variables
-                    start_date = str(currDate())
-                    end_date = str(currDate())
-                    print(f'{start_time} {end_time}')
-                    #2022-09-09 #YYYY, MM, DD
-                    if end_time[0:5] == '00:30':
-                        temp_end_date = end_date[8:]# getting date
-                        temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                        end_date = con_date[0:8] + temp_end_date
-                        #call calander function with time information and add to calander
-                        create_calendar_events(start_time, end_time, start_date, end_date)
-                    else:
-                        check_old_time(start_time)
-                        if old_time == False:
-                            create_calendar_events(start_time, end_time, start_date, end_date)
-                        else:
-                            print('Old Date')
+            main_sys_call(day)
+
         else:
-            print("No stage found! or Stage already implimented!")
+            if prev_status == status:
+                print('Stage Already Implimented')
+            else:
+                print('No stage found')
     else:
-        print("Something went wrong or No Loadshedding!")
-    # check status, if loadshed, then get times for stage, and add to calander, if not, then wait 5 min, and check again
+        if status == '1':
+            print('No Loadshedding!')
+        else:
+            print('Something Went Wrong!')
 
-
+# function to create events
 def create_calendar_events(start_time, end_time, start_date, end_date):
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
@@ -349,7 +268,7 @@ def create_calendar_events(start_time, end_time, start_date, end_date):
         print(start, event['summary'])
 
 
-
+# Main function, being initialized by __nam__ == '__main__'
 def main():
     schedule.every(0.166666).minutes.do(call_status)
 
