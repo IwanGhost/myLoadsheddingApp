@@ -34,7 +34,7 @@ wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 stage_num = 0
 
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
-url = 'C:\\Users\Ghost\Documents' #C:\Users\Ghost\Documents
+url = 'C:\\Users\[OwnDir]\Documents'
 
 # Closes app
 def End():
