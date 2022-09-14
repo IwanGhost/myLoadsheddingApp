@@ -22,15 +22,16 @@ import datetime
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 # global stage, to test for repeating stages
-prev_status = ""
-
+prev_status = ''
+prev_date = str(datetime.date.today())
+current_date = ''
 # global var to check whether times on stages have passed
 old_time = True
 
 # loading in excel file with loadshedding times
 wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 
-# global var to check whether or not same stage was previously implimented
+# global var to hold stage num
 stage_num = 0
 
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
@@ -94,6 +95,7 @@ def get_load_status():
 def call_status():
 
     global stage_num
+    global current_date
 
     status = get_load_status() #3
 
@@ -105,6 +107,8 @@ def call_status():
         print('Stage currently is: Stage ' + str(stage_num))
 
         day = check_day() #7
+
+        current_date = currDate()
 
         main_sys(status, day) # ( 3, 7)
 
@@ -132,11 +136,12 @@ def main_sys_call(day):
         val = row[(day + 1)].value
         if val == stage_num:
             start_time = str(row[0].value)
-            end_time = str(row[1].value)  # Need to have global variables
+            end_time = str(row[1].value)
             start_date = str(currDate())
             end_date = str(currDate())
             print(f'{start_time} {end_time}')
             #2022-09-09 #YYYY, MM, DD
+            # if end_time = 00:30:00
             if end_time[0:5] == '00:30':
                 temp_end_date = end_date[8:]# getting date
                 temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
@@ -156,31 +161,64 @@ def main_sys(status, day):
     status = status
     day = day
     global prev_status
+    global current_date
+    global prev_date
 
     if status != '1': # 1 = not loadshedding
         if status == '2' and prev_status != status: # stage 1
             prev_status = status
-            main_sys_call(day) # call to test all conditions
+            # checking if date have changed
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day) # call to test all conditions
 
         elif status == '3' and prev_status != status: # stage 2
             prev_status = status
-            main_sys_call(day)
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day)
 
         elif status == '4' and prev_status != status: # stage 3
             prev_status = status
-            main_sys_call(day)
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day)
 
         elif status == '5' and prev_status != status: # stage 4
             prev_status = status
-            main_sys_call(day)
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day)
 
         elif status == '6' and prev_status != status: # stage 5
             prev_status = status
-            main_sys_call(day)
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day)
 
         elif status == '7' and prev_status != status: # stage 6
             prev_status = status
-            main_sys_call(day)
+            if current_date > prev_date:
+                print('Delete All Current Events')
+                prev_date = current_date
+                main_sys_call(day)
+            else:
+                main_sys_call(day)
 
         else:
             if prev_status == status:
