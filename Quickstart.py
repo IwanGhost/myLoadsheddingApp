@@ -22,7 +22,7 @@ import datetime
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 # global stage, to test for repeating stages
-prev_status = ''
+prev_status = 0
 prev_date = str(datetime.date.today())
 current_date = ''
 # global var to check whether times on stages have passed
@@ -35,7 +35,7 @@ wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 stage_num = 0
 
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
-url = 'C:\\Users\[OwnDir]\Documents'
+url = 'C:\\Users\[DIR]\Documents'
 
 # Closes app
 def End():
@@ -87,7 +87,9 @@ def get_load_status():
 
     res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus')
 
-    stage = res.text[:1]
+    stage = res.text
+
+    print(stage)
 
     return stage
 
@@ -96,20 +98,26 @@ def call_status():
 
     global stage_num
     global current_date
+    global prev_status
+    global prev_date
 
-    status = get_load_status() #3
+    current_date = currDate() #2022-09-06
 
-    if status != '99':
-        tmp_int = int(status) # 3
+    # check if day changed, then reset prev_status otherwize events won't be added, due to if check
+    if current_date > prev_date:
+        prev_date = current_date
+        prev_status = 0
 
-        stage_num = tmp_int - 1 #0 -> 3 ->  2
+    status = 5 #int(get_load_status()) #3
+
+    if status != 99:
+
+        stage_num = status - 1 #0 -> 3 ->  2
 
         print('Stage currently is: Stage ' + str(stage_num))
 
         day = check_day() #7
-
-        current_date = currDate()
-
+            
         main_sys(status, day) # ( 3, 7)
 
         print('End Of Call')
@@ -118,12 +126,13 @@ def call_status():
         End()
 
 # Function to simplify code and to do all logic
-def main_sys_call(day):
+def main_sys_call(day, service):
 
     global wrkbk
     global stage_num
     global old_time
     day = day
+    service = service
 
     #prev_status = prev_status
     #status = "stage 1"
@@ -147,11 +156,11 @@ def main_sys_call(day):
                 temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
                 end_date = con_date[0:8] + temp_end_date
                 #call calander function with time information and add to calander
-                create_calendar_events(start_time, end_time, start_date, end_date)
+                create_calendar_events(start_time, end_time, start_date, end_date, service)
             else:
                 check_old_time(start_time)
                 if old_time == False:
-                    create_calendar_events(start_time, end_time, start_date, end_date)
+                    create_calendar_events(start_time, end_time, start_date, end_date, service)
                 else:
                     print('Old Time')
 
@@ -161,64 +170,49 @@ def main_sys(status, day):
     status = status
     day = day
     global prev_status
-    global current_date
-    global prev_date
 
-    if status != '1': # 1 = not loadshedding
-        if status == '2' and prev_status != status: # stage 1
+    if status != 1: # 1 = not loadshedding
+        if status == 2 and prev_status != status: # stage 1
             prev_status = status
-            # checking if date have changed
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day) # call to test all conditions
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
-        elif status == '3' and prev_status != status: # stage 2
+        elif status == 3 and prev_status != status: # stage 2
             prev_status = status
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day)
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
-        elif status == '4' and prev_status != status: # stage 3
+        elif status == 4 and prev_status != status: # stage 3
             prev_status = status
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day)
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
-        elif status == '5' and prev_status != status: # stage 4
+        elif status == 5 and prev_status != status: # stage 4
             prev_status = status
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day)
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
-        elif status == '6' and prev_status != status: # stage 5
+        elif status == 6 and prev_status != status: # stage 5
             prev_status = status
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day)
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
-        elif status == '7' and prev_status != status: # stage 6
+        elif status == 7 and prev_status != status: # stage 6
             prev_status = status
-            if current_date > prev_date:
-                print('Delete All Current Events')
-                prev_date = current_date
-                main_sys_call(day)
-            else:
-                main_sys_call(day)
+            service, now = event_setup()
+            deleteEvents(service, now)
+            main_sys_call(day, service)
+            checkEvents(service, now)
 
         else:
             if prev_status == status:
@@ -226,13 +220,13 @@ def main_sys(status, day):
             else:
                 print('No stage found')
     else:
-        if status == '1':
+        if status == 1:
             print('No Loadshedding!')
         else:
             print('Something Went Wrong!')
 
 # function to create events
-def create_calendar_events(start_time, end_time, start_date, end_date):
+def event_setup():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -256,15 +250,17 @@ def create_calendar_events(start_time, end_time, start_date, end_date):
             pickle.dump(creds, token)
 
     service = build('calendar', 'v3', credentials=creds)
-
-    
-    # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    ###
+    return service, now
+
+def create_calendar_events(start_time, end_time, start_date, end_date, service):
+
+    #service = service
+
     event = {
       'summary': 'LOADSHEDDING',
       'location': 'Home',
-      'description': 'Loadshedding APP.',
+      'description': 'Loadshedding APP',
       'start': {
         'dateTime': start_date + 'T' + start_time,
         'timeZone': 'Africa/Windhoek',
@@ -291,7 +287,11 @@ def create_calendar_events(start_time, end_time, start_date, end_date):
 
     event = service.events().insert(calendarId='primary', body=event).execute()
     print ('Event created: %s' % (event.get('htmlLink')))
-    #####
+
+def checkEvents(service, now):
+
+    service = service
+    now = now
     
     print('Getting the upcoming 5 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -305,10 +305,30 @@ def create_calendar_events(start_time, end_time, start_date, end_date):
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
 
+def deleteEvents(service, now):
+
+    service = service
+    now = now
+    
+    print('Deleting Events!')
+    events_result = service.events().list(calendarId='primary', timeMin=now,
+                                        maxResults=20, singleEvents=True,
+                                        orderBy='startTime').execute()
+    events = events_result.get('items', [])
+
+    if not events:
+        print('No upcoming events found to be deleted')
+    time.sleep(5)
+    for event in events:
+        if event['description'] == 'Loadshedding APP':
+            print('Found Event!')
+            check_event_id = event['id']
+            service.events().delete(calendarId='primary', eventId=check_event_id).execute()
+            print('Done deleting!')
 
 # Main function, being initialized by __nam__ == '__main__'
 def main():
-    schedule.every(0.166666).minutes.do(call_status)
+    schedule.every(0.2666666).minutes.do(call_status)
 
     while True:
             schedule.run_pending()
