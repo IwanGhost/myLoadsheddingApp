@@ -131,8 +131,6 @@ def main_sys_call(day, service):
     global wrkbk
     global stage_num
     global old_time
-    day = day
-    service = service
 
     #prev_status = prev_status
     #status = "stage 1"
@@ -167,8 +165,6 @@ def main_sys_call(day, service):
 # Main sys
 def main_sys(status, day):
 
-    status = status
-    day = day
     global prev_status
 
     if status != 1: # 1 = not loadshedding
@@ -255,8 +251,6 @@ def event_setup():
 
 def create_calendar_events(start_time, end_time, start_date, end_date, service):
 
-    #service = service
-
     event = {
       'summary': 'LOADSHEDDING',
       'location': 'Home',
@@ -272,10 +266,6 @@ def create_calendar_events(start_time, end_time, start_date, end_date, service):
       'recurrence': [
         'RRULE:FREQ=DAILY;COUNT=1'
       ],
-##      'attendees': [
-##        {'email': 'lpage@example.com'},
-##        {'email': 'sbrin@example.com'},
-##      ],
       'reminders': {
         'useDefault': False,
         'overrides': [
@@ -286,12 +276,10 @@ def create_calendar_events(start_time, end_time, start_date, end_date, service):
     }
 
     event = service.events().insert(calendarId='primary', body=event).execute()
-    print ('Event created: %s' % (event.get('htmlLink')))
+    #print ('Event created: %s' % (event.get('htmlLink')))
+    print ('Event created')
 
 def checkEvents(service, now):
-
-    service = service
-    now = now
     
     print('Getting the upcoming 5 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -306,9 +294,6 @@ def checkEvents(service, now):
         print(start, event['summary'])
 
 def deleteEvents(service, now):
-
-    service = service
-    now = now
     
     print('Deleting Events!')
     events_result = service.events().list(calendarId='primary', timeMin=now,
@@ -318,7 +303,6 @@ def deleteEvents(service, now):
 
     if not events:
         print('No upcoming events found to be deleted')
-    time.sleep(5)
     for event in events:
         if event['description'] == 'Loadshedding APP':
             print('Found Event!')
