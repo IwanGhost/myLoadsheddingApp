@@ -21,6 +21,7 @@ import datetime
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
+
 # global stage, to test for repeating stages
 prev_status = 0
 prev_date = str(datetime.date.today())
@@ -35,7 +36,7 @@ wrkbk = openpyxl.load_workbook("Loadshedding.xlsx")
 stage_num = 0
 
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
-url = 'C:\\Users\[DIR]\Documents'
+url = 'C:\\Users\Ghost\Documents'
 
 # Closes app
 def End():
@@ -89,8 +90,6 @@ def get_load_status():
 
     stage = res.text
 
-    print(stage)
-
     return stage
 
 # Calls this function every 5 minutes
@@ -108,9 +107,9 @@ def call_status():
         prev_date = current_date
         prev_status = 0
 
-    status = 5 #int(get_load_status()) #3
+    status = int(get_load_status()) #3
 
-    if status != 99:
+    if status != 99 and status != -1:
 
         stage_num = status - 1 #0 -> 3 ->  2
 
@@ -139,8 +138,8 @@ def main_sys_call(day, service):
     ws = wrkbk['Stage_' + str(stage_num)]
 
     #loop through excel
-    for row in ws.iter_rows():
-        val = row[(day + 1)].value
+    for row in ws.iter_rows(): #loops through sheet with specific stage name
+        val = row[(day + 1)].value # sets val  = row , but row number is = day + 1
         if val == stage_num:
             start_time = str(row[0].value)
             end_time = str(row[1].value)
@@ -310,7 +309,7 @@ def deleteEvents(service, now):
             service.events().delete(calendarId='primary', eventId=check_event_id).execute()
             print('Done deleting!')
 
-# Main function, being initialized by __nam__ == '__main__'
+# Main function, being initialized by __name__ == '__main__'
 def main():
     schedule.every(0.2666666).minutes.do(call_status)
 
