@@ -17,4 +17,8 @@ This app is made for windows only, currently.
   pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
   ```
 - Create a folder on your PC where you would like to run everything from
-- Download and run Quickstart_Setup.py
+- Download and run Quickstart_Setup.py from within the folder you just created
+  - Make sure the credentials.json file is also within the folder you just created
+  - This will make sure you get a token.pickle file, also just make sure you have one, after running it, and make sure the file name is token.pickle
+- Download the Quickstart.py, Loadsheding.xlsx and user-agents.txt files into the folder you created
+- Now just make sure you have a internet connection and run Quickstart.py
