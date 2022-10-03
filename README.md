@@ -6,6 +6,7 @@ This app is made for windows only, currently.
 
 ## (WIP)How to use
 
+- Create a folder on your PC where you would like to run everything from
 - Go to: https://developers.google.com/calendar/api/quickstart/python
 - Follow the steps given on the website, namely:
   - Enable the Google Calendar API
@@ -16,7 +17,6 @@ This app is made for windows only, currently.
   ```bash
   pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
   ```
-- Create a folder on your PC where you would like to run everything from
 - Download and run Quickstart_Setup.py from within the folder you just created
   - Make sure the credentials.json file is also within the folder you just created
   - This will make sure you get a token.pickle file, also just make sure you have one, after running it, and make sure the file name is token.pickle
