@@ -96,9 +96,7 @@ def getLoadStatus():
     user_agent = random.choice(user_headers)
     headers = {'User-Agent': user_agent.replace("\n", "")}
 
-    res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus', headers=headers)
-
-    stage = res.text
+    stage = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus', headers=headers).text
 
     return stage
 
