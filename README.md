@@ -2,7 +2,7 @@
 Just a small project to track loadshedding and set reminders on your calendar.
 
 ## Note:
-This app is made for windows only, currently.
+This app is made for windows only, and only works for Stellenbosch zone 2, currently.
 
 ## (WIP)How to use
 
