@@ -3,5 +3,5 @@ Just a small project to track loadshedding and set reminders on your calendar.
 
 ## (WIP)How to use
 
-- Fill creds
+- Go to: https://developers.google.com/calendar/api/quickstart/python
 - Run Quickstart
