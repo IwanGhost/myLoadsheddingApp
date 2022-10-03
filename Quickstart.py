@@ -17,7 +17,7 @@ import os
 import sys
 import openpyxl
 import datetime
-
+import random
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -26,6 +26,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 prev_status = 0
 prev_date = str(datetime.date.today())
 current_date = ''
+
 # global var to check whether times on stages have passed
 old_time = True
 
@@ -38,13 +39,17 @@ stage_num = 0
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
 url = 'C:\\Users\Ghost\Documents'
 
+#populating user_headers with headers from .txt file
+with open('user-agents.txt') as f:
+     user_headers = f.readlines()
+
 # Closes app
 def End():
     print("Exiting Program")
     sys.exit()
 
 # Return time in HH:MM:SS - 17:45:17
-def check_time():
+def checkTime():
 
     now = datetime.datetime.now()
 
@@ -57,7 +62,7 @@ def currDate():
     return currentDate
 
 # Returns day - 09 - for 9th
-def check_day():
+def checkDay():
 
     currentDate = currDate()
 
@@ -71,12 +76,12 @@ def check_day():
         return day
 
 # checks if scheduled time have passed or not
-def check_old_time(start_time):
+def checkOldTime(start_time):
 
     global old_time
 
     start_time = start_time
-    current_time = check_time()
+    current_time = checkTime()
     if start_time[0:5] >= current_time[0:5]:
         old_time = False
         return old_time
@@ -84,16 +89,21 @@ def check_old_time(start_time):
         return old_time
 
 # Returns stage via API - exp, 3
-def get_load_status():
+def getLoadStatus():
 
-    res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus')
+    global user_headers
+
+    user_agent = random.choice(user_headers)
+    headers = {'User-Agent': user_agent.replace("\n", "")}
+
+    res = requests.get('https://loadshedding.eskom.co.za/LoadShedding/GetStatus', headers=headers)
 
     stage = res.text
 
     return stage
 
 # Calls this function every 5 minutes
-def call_status():
+def callStatus():
 
     global stage_num
     global current_date
@@ -107,7 +117,7 @@ def call_status():
         prev_date = current_date
         prev_status = 0
 
-    status = int(get_load_status()) #3
+    status = int(getLoadStatus()) #3
 
     if status != 99 and status != -1:
 
@@ -115,9 +125,9 @@ def call_status():
 
         print('Stage currently is: Stage ' + str(stage_num))
 
-        day = check_day() #7
+        day = checkDay() #7
             
-        main_sys(status, day) # ( 3, 7)
+        mainSys(status, day) # ( 3, 7)
 
         print('End Of Call')
     else:
@@ -125,7 +135,7 @@ def call_status():
         End()
 
 # Function to simplify code and to do all logic
-def main_sys_call(day, service):
+def mainSysCall(day, service):
 
     global wrkbk
     global stage_num
@@ -153,60 +163,60 @@ def main_sys_call(day, service):
                 temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
                 end_date = con_date[0:8] + temp_end_date
                 #call calander function with time information and add to calander
-                create_calendar_events(start_time, end_time, start_date, end_date, service)
+                createCalEvents(start_time, end_time, start_date, end_date, service)
             else:
-                check_old_time(start_time)
+                checkOldTime(start_time)
                 if old_time == False:
-                    create_calendar_events(start_time, end_time, start_date, end_date, service)
+                    createCalEvents(start_time, end_time, start_date, end_date, service)
                 else:
                     print('Old Time')
 
 # Main sys
-def main_sys(status, day):
+def mainSys(status, day):
 
     global prev_status
 
     if status != 1: # 1 = not loadshedding
         if status == 2 and prev_status != status: # stage 1
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         elif status == 3 and prev_status != status: # stage 2
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         elif status == 4 and prev_status != status: # stage 3
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         elif status == 5 and prev_status != status: # stage 4
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         elif status == 6 and prev_status != status: # stage 5
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         elif status == 7 and prev_status != status: # stage 6
             prev_status = status
-            service, now = event_setup()
+            service, now = eventSetup()
             deleteEvents(service, now)
-            main_sys_call(day, service)
+            mainSysCall(day, service)
             checkEvents(service, now)
 
         else:
@@ -221,7 +231,7 @@ def main_sys(status, day):
             print('Something Went Wrong!')
 
 # function to create events
-def event_setup():
+def eventSetup():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
     """
@@ -248,7 +258,7 @@ def event_setup():
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     return service, now
 
-def create_calendar_events(start_time, end_time, start_date, end_date, service):
+def createCalEvents(start_time, end_time, start_date, end_date, service):
 
     event = {
       'summary': 'LOADSHEDDING',
@@ -311,7 +321,7 @@ def deleteEvents(service, now):
 
 # Main function, being initialized by __name__ == '__main__'
 def main():
-    schedule.every(0.2666666).minutes.do(call_status)
+    schedule.every(0.2666666).minutes.do(callStatus)
 
     while True:
             schedule.run_pending()
