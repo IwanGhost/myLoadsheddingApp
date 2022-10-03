@@ -12,13 +12,13 @@ This app is made for windows only, currently.
   - Enable the Google Calendar API
   - Going to credentials and adding a OAuth client ID
   - Make sure it is set to desktop app
-  - Make sure to download the credentials.json file and rename it to credentials.json if it is not already so
+  - Make sure to download the credentials.json file to the folder you created and rename it to credentials.json if it is not already so
 - Make sure to install the google calendar API libraries: 
   ```bash
   pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
   ```
-- Download and run Quickstart_Setup.py from within the folder you just created
-  - Make sure the credentials.json file is also within the folder you just created
+- Download and run Quickstart_Setup.py from within the folder you created
+  - Make sure the credentials.json file is also within the folder you created
   - This will make sure you get a token.pickle file, also just make sure you have one, after running it, and make sure the file name is token.pickle
 - Download the Quickstart.py, Loadsheding.xlsx and user-agents.txt files into the folder you created
 - Now just make sure you have a internet connection and run Quickstart.py
