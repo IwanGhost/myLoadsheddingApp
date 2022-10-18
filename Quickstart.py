@@ -116,21 +116,26 @@ def callStatus():
         prev_status = 0
 
     status = int(getLoadStatus()) #3
+    #status = 5 #3
 
-    if status != 99 and status != -1:
+    if status != 99 and status != -1 and status != 1:
 
         stage_num = status - 1 #0 -> 3 ->  2
 
         print('Stage currently is: Stage ' + str(stage_num))
 
         day = checkDay() #7
+        #day = 25
             
         mainSys(status, day) # ( 3, 7)
 
         print('End Of Call')
     else:
-        print('API is broken, App will be stopped')
-        End()
+        if status == 1:
+            print('No Loadshedding!')
+        else:
+            print('API is broken, App will be stopped')
+            End()
 
 # Function to simplify code and to do all logic
 def mainSysCall(day, service):
@@ -159,7 +164,7 @@ def mainSysCall(day, service):
             if end_time[0:5] == '00:30':
                 temp_end_date = end_date[8:]# getting date
                 temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
-                end_date = con_date[0:8] + temp_end_date
+                end_date = end_date[0:8] + temp_end_date
                 #call calander function with time information and add to calander
                 createCalEvents(start_time, end_time, start_date, end_date, service)
             else:
@@ -174,59 +179,54 @@ def mainSys(status, day):
 
     global prev_status
 
-    if status != 1: # 1 = not loadshedding
-        if status == 2 and prev_status != status: # stage 1
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    if status == 2 and prev_status != status: # stage 1
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        elif status == 3 and prev_status != status: # stage 2
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    elif status == 3 and prev_status != status: # stage 2
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        elif status == 4 and prev_status != status: # stage 3
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    elif status == 4 and prev_status != status: # stage 3
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        elif status == 5 and prev_status != status: # stage 4
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    elif status == 5 and prev_status != status: # stage 4
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        elif status == 6 and prev_status != status: # stage 5
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    elif status == 6 and prev_status != status: # stage 5
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        elif status == 7 and prev_status != status: # stage 6
-            prev_status = status
-            service, now = eventSetup()
-            deleteEvents(service, now)
-            mainSysCall(day, service)
-            checkEvents(service, now)
+    elif status == 7 and prev_status != status: # stage 6
+        prev_status = status
+        service, now = eventSetup()
+        deleteEvents(service, now)
+        mainSysCall(day, service)
+        checkEvents(service, now)
 
-        else:
-            if prev_status == status:
-                print('Stage Already Implimented')
-            else:
-                print('No stage found')
     else:
-        if status == 1:
-            print('No Loadshedding!')
+        if prev_status == status:
+            print('Stage Already Implimented')
         else:
-            print('Something Went Wrong!')
+            print('No stage found')
+
 
 # function to create events
 def eventSetup():
