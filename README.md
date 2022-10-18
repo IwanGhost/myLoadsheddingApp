@@ -22,3 +22,6 @@ This app is made for windows only, and only works for Stellenbosch zone 2, curre
   - This will make sure you get a token.pickle file, also just make sure you have one, after running it, and make sure the file name is token.pickle
 - Download the Quickstart.py, Loadsheding.xlsx and user-agents.txt files into the folder you created
 - Now just make sure you have a internet connection and run Quickstart.py
+
+## Disclaimer
+myLoadsheddingApp is provided by Iwan Smit "as is" and "with all faults". The provider makes no representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, typographical errors, or other harmful components of this software. There are inherent dangers in the use of any software, and you are solely responsible for determining whether myLoadsheddingApp is compatible with your equipment and other software installed on your equipment. You are also solely responsible for the protection of your equipment and backup of your data, and the provider will not be liable for any damages you may suffer in connection with using, modifying, or distributing this software.
