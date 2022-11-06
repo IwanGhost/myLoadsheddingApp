@@ -1,5 +1,12 @@
-#myLoadsheddingApp
-#import libraries
+#################################################################################
+#
+# Quickstart.py
+# (short description here)
+#
+#################################################################################
+
+# --- IMPORTS -------------------------------------------------------------------
+
 from __future__ import print_function
 import datetime
 import pickle
@@ -18,6 +25,8 @@ import sys
 import openpyxl
 import datetime
 import random
+
+# --- GLOBAL DEFINITIONS --------------------------------------------------------
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -39,14 +48,19 @@ stage_num = 0
 # path to root, Not permanent fix, needs better solution - check dir for .txt file
 url = 'C:\\Users\Ghost\Documents'
 
-#populating user_headers with headers from .txt file
+# --- FUNCTIONS -----------------------------------------------------------------
+
+
+# populating user_headers with headers from .txt file
 with open('user-agents.txt') as f:
-     user_headers = f.readlines()
+    user_headers = f.readlines()
+
 
 # Closes app
 def End():
     print("Exiting Program")
     sys.exit()
+
 
 # Return time in HH:MM:SS - 17:45:17
 def checkTime():
@@ -56,28 +70,28 @@ def checkTime():
     current_time = now.strftime("%H:%M:%S")
     return current_time
 
+
 # Returns date 2022-09-06 #YYYY, MM, DD
 def currDate():
     currentDate = str(datetime.date.today())
     return currentDate
 
+
 # Returns day - 09 - for 9th
 def checkDay():
-
     currentDate = currDate()
-
     res = currentDate[8:]
     if res[0] == '0':
-        res = res[1 : : ]
+        res = res[1::]
         day = int(res)
         return day
     else:
         day = int(res)
         return day
 
+
 # checks if scheduled time have passed or not
 def checkOldTime(start_time):
-
     global old_time
 
     start_time = start_time
@@ -88,9 +102,9 @@ def checkOldTime(start_time):
     else:
         return old_time
 
+
 # Returns stage via API - exp, 3
 def getLoadStatus():
-
     global user_headers
 
     user_agent = random.choice(user_headers)
@@ -100,6 +114,7 @@ def getLoadStatus():
 
     return stage
 
+
 # Calls this function every 5 minutes
 def callStatus():
 
@@ -108,26 +123,26 @@ def callStatus():
     global prev_status
     global prev_date
 
-    current_date = currDate() #2022-09-06
+    current_date = currDate()  # 2022-09-06
 
-    # check if day changed, then reset prev_status otherwize events won't be added, due to if check
+    # check if day changed, then reset prev_status otherwise events won't be added, due to if check
     if current_date > prev_date:
         prev_date = current_date
         prev_status = 0
 
-    status = int(getLoadStatus()) #3
-    #status = 5 #3
+    status = int(getLoadStatus())  # 3
+    # status = 5 #3
 
     if status != 99 and status != -1 and status != 1:
 
-        stage_num = status - 1 #0 -> 3 ->  2
+        stage_num = status - 1  # 0 -> 3 ->  2
 
         print('Stage currently is: Stage ' + str(stage_num))
 
-        day = checkDay() #7
-        #day = 25
-            
-        mainSys(status, day) # ( 3, 7)
+        day = checkDay()  # 7
+        # day = 25
+
+        mainSys(status, day)  # ( 3, 7)
 
         print('End Of Call')
     else:
@@ -137,6 +152,7 @@ def callStatus():
             print('API is broken, App will be stopped')
             End()
 
+
 # Function to simplify code and to do all logic
 def mainSysCall(day, service):
 
@@ -144,77 +160,78 @@ def mainSysCall(day, service):
     global stage_num
     global old_time
 
-    #prev_status = prev_status
-    #status = "stage 1"
-    #compare status
+    # prev_status = prev_status
+    # status = "stage 1"
+    # compare status
 
     ws = wrkbk['Stage_' + str(stage_num)]
 
-    #loop through excel
-    for row in ws.iter_rows(): #loops through sheet with specific stage name
-        val = row[(day + 1)].value # sets val  = row , but row number is = day + 1
+    # loop through excel
+    for row in ws.iter_rows():  # loops through sheet with specific stage name
+        val = row[(day + 1)].value  # sets val  = row , but row number is = day + 1
         if val == stage_num:
             start_time = str(row[0].value)
             end_time = str(row[1].value)
             start_date = str(currDate())
             end_date = str(currDate())
             print(f'{start_time} {end_time}')
-            #2022-09-09 #YYYY, MM, DD
+            # 2022-09-09 #YYYY, MM, DD
             # if end_time = 00:30:00
             if end_time[0:5] == '00:30':
-                temp_end_date = end_date[8:]# getting date
-                temp_end_date = str(int(temp_end_date)+1) # converting to int and adding 1 then back to str
+                temp_end_date = end_date[8:]  # getting date
+                temp_end_date = str(int(temp_end_date)+1)  # converting to int and adding 1 then back to str
                 end_date = end_date[0:8] + temp_end_date
-                #call calander function with time information and add to calander
+                # call calendar function with time information and add to calendar
                 createCalEvents(start_time, end_time, start_date, end_date, service)
             else:
                 checkOldTime(start_time)
-                if old_time == False:
+                if old_time is False:
                     createCalEvents(start_time, end_time, start_date, end_date, service)
                 else:
                     print('Old Time')
+
 
 # Main sys
 def mainSys(status, day):
 
     global prev_status
 
-    if status == 2 and prev_status != status: # stage 1
+    if status == 2 and prev_status != status:  # stage 1
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
         mainSysCall(day, service)
         checkEvents(service, now)
 
-    elif status == 3 and prev_status != status: # stage 2
+    elif status == 3 and prev_status != status:  # stage 2
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
         mainSysCall(day, service)
         checkEvents(service, now)
 
-    elif status == 4 and prev_status != status: # stage 3
+    elif status == 4 and prev_status != status:  # stage 3
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
         mainSysCall(day, service)
         checkEvents(service, now)
 
-    elif status == 5 and prev_status != status: # stage 4
+    elif status == 5 and prev_status != status:  # stage 4
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
         mainSysCall(day, service)
         checkEvents(service, now)
 
-    elif status == 6 and prev_status != status: # stage 5
+    elif status == 6 and prev_status != status:  # stage 5
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
         mainSysCall(day, service)
         checkEvents(service, now)
 
-    elif status == 7 and prev_status != status: # stage 6
+    elif status == 7 and prev_status != status:  # stage 6
         prev_status = status
         service, now = eventSetup()
         deleteEvents(service, now)
@@ -235,7 +252,7 @@ def eventSetup():
     """
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
+    # created automatically when the authorisation flow completes for the first
     # time.
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
@@ -253,8 +270,9 @@ def eventSetup():
             pickle.dump(creds, token)
 
     service = build('calendar', 'v3', credentials=creds)
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+    now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     return service, now
+
 
 def createCalEvents(start_time, end_time, start_date, end_date, service):
 
@@ -283,15 +301,17 @@ def createCalEvents(start_time, end_time, start_date, end_date, service):
     }
 
     event = service.events().insert(calendarId='primary', body=event).execute()
-    #print ('Event created: %s' % (event.get('htmlLink')))
-    print ('Event created')
+    # print ('Event created: %s' % (event.get('htmlLink')))
+    print('Event created')
+
 
 def checkEvents(service, now):
-    
+
     print('Getting the upcoming 5 events')
     events_result = service.events().list(calendarId='primary', timeMin=now,
-                                        maxResults=5, singleEvents=True,
-                                        orderBy='startTime').execute()
+                                          maxResults=5, singleEvents=True,
+                                          orderBy='startTime').execute()
+
     events = events_result.get('items', [])
 
     if not events:
@@ -300,12 +320,13 @@ def checkEvents(service, now):
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
 
+
 def deleteEvents(service, now):
-    
     print('Deleting Events!')
     events_result = service.events().list(calendarId='primary', timeMin=now,
-                                        maxResults=20, singleEvents=True,
-                                        orderBy='startTime').execute()
+                                          maxResults=20, singleEvents=True,
+                                          orderBy='startTime').execute()
+
     events = events_result.get('items', [])
 
     if not events:
@@ -317,17 +338,25 @@ def deleteEvents(service, now):
             service.events().delete(calendarId='primary', eventId=check_event_id).execute()
             print('Done deleting!')
 
-# Main function, being initialized by __name__ == '__main__'
+
+# Main function, being initialised by __name__ == '__main__'
 def main():
     schedule.every(0.2666666).minutes.do(callStatus)
 
     while True:
-            schedule.run_pending()
-            for fname in os.listdir(url):
-                    if fname.endswith('.txt'):
-                            time.sleep(0.3)
-                            End()
-            time.sleep(1)
+        schedule.run_pending()
+        for fname in os.listdir(url):
+            if fname.endswith('.txt'):
+                time.sleep(0.3)
+                End()
+        time.sleep(1)
+
+
+# --- SCRIPT --------------------------------------------------------------------
+
 
 if __name__ == '__main__':
     main()
+
+
+# --- EOF -----------------------------------------------------------------------
